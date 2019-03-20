@@ -248,7 +248,7 @@ contains
 
           ! Live grass moisture is a function of SAV and changes via Nesterov Index along the
           ! same relationship as the 1 hour fuels 
-          fuel_moisture(lg_sf)        = exp(-1.0_r8 * ((SF_val_SAV(tw_sf)/SF_val_drying_ratio) * currentSite%acc_NI)           
+          fuel_moisture(lg_sf)        = exp(-1.0_r8 * (SF_val_SAV(tw_sf)/SF_val_drying_ratio) * currentSite%acc_NI)           
  
           ! Average properties over the first four litter pools (dead leaves, twigs, s branches, l branches) 
           currentPatch%fuel_bulkd     = sum(currentPatch%fuel_frac(dl_sf:lb_sf) * SF_val_FBD(dl_sf:lb_sf))     
