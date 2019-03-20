@@ -165,7 +165,6 @@ contains
     type(ed_patch_type),  pointer :: currentPatch
     type(ed_cohort_type), pointer :: currentCohort
 
-    real(r8) timeav_swc
     real(r8) alpha_FMC(nfsc)     ! Relative fuel moisture adjusted per drying ratio
     real(r8) fuel_moisture(nfsc) ! Scaled moisture content of small litter fuels. 
     real(r8) MEF(nfsc)           ! Moisture extinction factor of fuels     integer n 
@@ -230,13 +229,13 @@ contains
           endif
 
           currentPatch%fuel_frac(lg_sf)       = currentPatch%livegrass       / currentPatch%sum_fuel   
-          MEF(1:nfsc)               = 0.524_r8 - 0.066_r8 * log10(SF_val_SAV(1:nfsc)) 
+          MEF(1:nfsc)                         = 0.524_r8 - 0.066_r8 * log10(SF_val_SAV(1:nfsc)) 
 
           !--- weighted average of relative moisture content---
           ! Equation 6 in Thonicke et al. 2010. across leaves,twig, small branch, and large branch
           ! dead leaves and twigs included in 1hr pool per Thonicke (2010) 
           ! Calculate fuel moisture for trunks to hold value for fuel consumption
-          alpha_FMC(dl_sf:tr_sf) = SF_val_SAV(dl_sf:tr_sf)/SF_val_drying_ratio
+          alpha_FMC(dl_sf:tr_sf)      = SF_val_SAV(dl_sf:tr_sf)/SF_val_drying_ratio
           
           fuel_moisture(dl_sf:tr_sf)  = exp(-1.0_r8 * alpha_FMC(dl_sf:tr_sf) * currentSite%acc_NI) 
  
@@ -246,12 +245,10 @@ contains
              if ( hlm_masterproc == itrue ) write(fates_log(),*) 'csa ',currentSite%acc_NI
              if ( hlm_masterproc == itrue ) write(fates_log(),*) 'sfv ',alpha_FMC
           endif
-          ! FIX(RF,032414): needs refactoring. 
-          ! average water content !is this the correct metric?         
-          timeav_swc                  = sum(currentSite%water_memory(1:numWaterMem)) / real(numWaterMem,r8)
-          ! Equation B2 in Thonicke et al. 2010
-          ! live grass moisture content depends on upper soil layer
-          fuel_moisture(lg_sf)        = max(0.0_r8, 10.0_r8/9._r8 * timeav_swc - 1.0_r8/9.0_r8)           
+
+          ! Live grass moisture is a function of SAV and changes via Nesterov Index along the
+          ! same relationship as the 1 hour fuels 
+          fuel_moisture(lg_sf)        = exp(-1.0_r8 * ((SF_val_SAV(tw_sf)/SF_val_drying_ratio) * currentSite%acc_NI)           
  
           ! Average properties over the first four litter pools (dead leaves, twigs, s branches, l branches) 
           currentPatch%fuel_bulkd     = sum(currentPatch%fuel_frac(dl_sf:lb_sf) * SF_val_FBD(dl_sf:lb_sf))     
