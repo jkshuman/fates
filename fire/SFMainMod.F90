@@ -1024,7 +1024,7 @@ contains
                 currentCohort%fire_mort = max(0._r8,min(1.0_r8,currentCohort%crownfire_mort+currentCohort%cambial_mort- &
                      (currentCohort%crownfire_mort*currentCohort%cambial_mort)))  !joint prob.   
              else
-                currentCohort%fire_mort = 0.0_r8 !I have changed this to zero and made the mode of death removal of leaves... 
+                currentCohort%fire_mort = 0.0_r8 !Set to zero. mode of grass death is removal of leaves. 
              endif !trees
 
              currentCohort => currentCohort%shorter
