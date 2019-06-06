@@ -1110,10 +1110,10 @@ contains
        patch_site_areadis = currentPatch%area * currentPatch%disturbance_rate
 
        !************************************/ 
-       !PART 1)  Burn the fractions of existing litter in the new patch that were consumed by the fire. 
+       !PART 1)  Burn the fractions of donated litter in the new patch that were consumed by the fire. 
        !************************************/ 
        do c = 1,ncwd
-          burned_litter = new_patch%cwd_ag(c) * patch_site_areadis/new_patch%area * &
+          burned_litter = currentPatch%cwd_ag(c) * patch_site_areadis/new_patch%area * &
                 currentPatch%burnt_frac_litter(c) !kG/m2/day
           new_patch%cwd_ag(c) = new_patch%cwd_ag(c) - burned_litter
           currentSite%flux_out = currentSite%flux_out + burned_litter * new_patch%area !kG/site/day
@@ -1122,7 +1122,7 @@ contains
        enddo
 
        do p = 1,numpft
-          burned_litter = new_patch%leaf_litter(p) * patch_site_areadis/new_patch%area * &
+          burned_litter = currentPatch%leaf_litter(p) * patch_site_areadis/new_patch%area * &
                 currentPatch%burnt_frac_litter(dl_sf)
           new_patch%leaf_litter(p) = new_patch%leaf_litter(p) - burned_litter
           currentSite%flux_out = currentSite%flux_out + burned_litter * new_patch%area !kG/site/day
