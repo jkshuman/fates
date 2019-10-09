@@ -868,8 +868,9 @@ contains
                    if ( hlm_masterproc == itrue ) write(fates_log(),*) 'currentPatch%SH',currentPatch%SH,f_ag_bmass
                 endif
                 !2/3 Byram (1959)
-                currentPatch%SH = currentPatch%SH + f_ag_bmass * &
-                      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8) 
+                currentPatch%SH = currentPatch%SH + &
+                       EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
+                
 
              endif !trees only
              currentCohort=>currentCohort%shorter;
