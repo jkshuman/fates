@@ -823,8 +823,9 @@ contains
     real(r8) ::  sapw_c          ! sapwood carbon   [kg]
     real(r8) ::  struct_c        ! structure carbon [kg]
     real(r8) ::  temp_in_C       ! daily average temp in celcius
+    real(r8) ::  lethal_temp     ! lethal temp for crown foliage = 60 C
 
-    
+    lethal_temp = 60._r8
     temp_in_C = bc_in%t_veg24_pa(iofp) - tfrz
 
     currentPatch => currentSite%oldest_patch;  
@@ -876,7 +877,7 @@ contains
                 !      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
                  currentPatch%SH = currentPatch%SH + &
                       EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**1.17)/&
-                      ((0.107_r8 + currentPatch%effect_wspeed**3)**0.5_r8 * (60_r8 - temp_in_C)) 
+                      ((lethal_temp - temp_in_C) * ((0.107_r8 * currentPatch%FI + currentPatch%effect_wspeed**3)**0.5_r8))
                 
 
              endif !trees only
