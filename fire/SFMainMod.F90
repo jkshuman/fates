@@ -812,6 +812,7 @@ contains
     !currentPatch%FI  average fire intensity of flaming front during day.  kW/m.
 
     type(ed_site_type), intent(in), target :: currentSite
+    type(bc_in_type)  , intent(in)         :: bc_in
 
     type(ed_patch_type), pointer :: currentPatch
     type(ed_cohort_type), pointer :: currentCohort
@@ -821,7 +822,10 @@ contains
     real(r8) ::  leaf_c          ! leaf carbon      [kg]
     real(r8) ::  sapw_c          ! sapwood carbon   [kg]
     real(r8) ::  struct_c        ! structure carbon [kg]
+    real(r8) ::  temp_in_C       ! daily average temp in celcius
 
+    
+    temp_in_C = bc_in%t_veg24_pa(iofp) - tfrz
 
     currentPatch => currentSite%oldest_patch;  
     do while(associated(currentPatch)) 
@@ -868,8 +872,11 @@ contains
                    if ( hlm_masterproc == itrue ) write(fates_log(),*) 'currentPatch%SH',currentPatch%SH,f_ag_bmass
                 endif
                 !2/3 Byram (1959)
-                currentPatch%SH = currentPatch%SH + &
-                       EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
+                !currentPatch%SH = currentPatch%SH + &
+                !      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
+                 currentPatch%SH = currentPatch%SH + &
+                      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**1.17)/&
+                      ((0.107_r8 + currentPatch%effect_wspeed**3)**0.5_r8 * (60_r8 - temp_in_C)) 
                 
 
              endif !trees only
