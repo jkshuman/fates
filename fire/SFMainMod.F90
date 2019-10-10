@@ -858,37 +858,47 @@ contains
 
           enddo !end cohort loop
 
+
+
           !This loop weights the scorch height for the contribution of each cohort to the overall biomass.   
 
          ! does this do anything? I think it might be redundant? RF. 
           currentPatch%SH = 0.0_r8
-          currentCohort => currentPatch%tallest;
-          do while(associated(currentCohort))
-             if (EDPftvarcon_inst%woody(currentCohort%pft) == 1 &
-                  .and. (tree_ag_biomass > 0.0_r8)) then !trees only
 
-                leaf_c = currentCohort%prt%GetState(leaf_organ, all_carbon_elements)
-                sapw_c = currentCohort%prt%GetState(sapw_organ, all_carbon_elements)
-                struct_c = currentCohort%prt%GetState(struct_organ, all_carbon_elements)
+          !2/3 Byram (1959)
+          !OLD currentPatch%SH = currentPatch%SH + &
+          !OLD      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
+            currentPatch%SH = &
+                (currentPatch%FI**1.17)/&
+                ((lethal_temp - temp_in_C) * ((0.107_r8 * currentPatch%FI + currentPatch%effect_wspeed**3)**0.5_r8))
+            
+          !currentCohort => currentPatch%tallest;
+          !do while(associated(currentCohort))
+          !   if (EDPftvarcon_inst%woody(currentCohort%pft) == 1 &
+          !        .and. (tree_ag_biomass > 0.0_r8)) then !trees only
+
+           !     leaf_c = currentCohort%prt%GetState(leaf_organ, all_carbon_elements)
+           !     sapw_c = currentCohort%prt%GetState(sapw_organ, all_carbon_elements)
+           !     struct_c = currentCohort%prt%GetState(struct_organ, all_carbon_elements)
                 
-                f_ag_bmass = currentCohort%n * (leaf_c + &
-                             EDPftvarcon_inst%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c)) &
-                             / tree_ag_biomass
+           !     f_ag_bmass = currentCohort%n * (leaf_c + &
+            !                 EDPftvarcon_inst%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c)) &
+             !                / tree_ag_biomass
 
                 !equation 16 in Thonicke et al. 2010
-                if(write_SF == itrue)then
-                   if ( hlm_masterproc == itrue ) write(fates_log(),*) 'currentPatch%SH',currentPatch%SH,f_ag_bmass
-                endif
+              !  if(write_SF == itrue)then
+              !     if ( hlm_masterproc == itrue ) write(fates_log(),*) 'currentPatch%SH',currentPatch%SH,f_ag_bmass
+              !  endif
                 !2/3 Byram (1959)
                 !currentPatch%SH = currentPatch%SH + &
                 !      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
-                 currentPatch%SH = currentPatch%SH + &
-                      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**1.17)/&
-                      ((lethal_temp - temp_in_C) * ((0.107_r8 * currentPatch%FI + currentPatch%effect_wspeed**3)**0.5_r8))
+               !  currentPatch%SH = currentPatch%SH + &
+                !      EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**1.17)/&
+                 !     ((lethal_temp - temp_in_C) * ((0.107_r8 * currentPatch%FI + currentPatch%effect_wspeed**3)**0.5_r8))
                 
 
-             endif !trees only
-             currentCohort=>currentCohort%shorter;
+            ! endif !trees only
+            ! currentCohort=>currentCohort%shorter;
           enddo !end cohort loop
        endif !fire
 
