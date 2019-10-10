@@ -899,7 +899,7 @@ contains
 
             ! endif !trees only
             ! currentCohort=>currentCohort%shorter;
-          enddo !end cohort loop
+          !enddo !end cohort loop
        endif !fire
 
        currentPatch => currentPatch%younger;  
