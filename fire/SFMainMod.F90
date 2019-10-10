@@ -99,7 +99,7 @@ contains
        call ground_fuel_consumption(currentSite)
        call fire_intensity(currentSite)
        call area_burnt(currentSite)
-       call crown_scorching(currentSite)
+       call crown_scorching(currentSite, bc_in)
        call crown_damage(currentSite)
        call cambial_damage_kill(currentSite)
        call post_fire_mortality(currentSite)
@@ -806,13 +806,15 @@ contains
   end subroutine area_burnt
 
   !*****************************************************************
-  subroutine  crown_scorching ( currentSite ) 
+  subroutine  crown_scorching ( currentSite, bc_in ) 
   !*****************************************************************
     !currentPatch%SH !average scorch height for the patch(m)
     !currentPatch%FI  average fire intensity of flaming front during day.  kW/m.
 
-    type(ed_site_type), intent(in), target :: currentSite
-    type(bc_in_type)  , intent(in)         :: bc_in
+    use FatesConstantsMod  , only : tfrz => t_water_freeze_k_1atm
+
+    type(ed_site_type), intent(inout), target :: currentSite
+    type(bc_in_type)  , intent(in)            :: bc_in
 
     type(ed_patch_type), pointer :: currentPatch
     type(ed_cohort_type), pointer :: currentCohort
@@ -825,7 +827,12 @@ contains
     real(r8) ::  temp_in_C       ! daily average temp in celcius
     real(r8) ::  lethal_temp     ! lethal temp for crown foliage = 60 C
 
+    integer  ::  iofp            ! index of oldest fates patch
+
     lethal_temp = 60._r8
+
+    iofp = currentSite%oldest_patch%patchno
+    
     temp_in_C = bc_in%t_veg24_pa(iofp) - tfrz
 
     currentPatch => currentSite%oldest_patch;  
