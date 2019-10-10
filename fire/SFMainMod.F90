@@ -431,6 +431,7 @@ contains
     real(r8) beta,beta_op         ! weighted average of packing ratio (unitless)
     real(r8) ir                   ! reaction intensity (kJ/m2/min)
     real(r8) xi,eps,phi_wind      ! all are unitless
+    real(r8) wind_fact            ! multiplier for wind in ROS
     real(r8) q_ig                 ! heat of pre-ignition (kJ/kg)
     real(r8) reaction_v_opt,reaction_v_max !reaction velocity (per min)!optimum and maximum
     real(r8) moist_damp,mw_weight ! moisture dampening coefficient and ratio fuel moisture to extinction
@@ -447,7 +448,7 @@ contains
         ! ---initialise parameters to zero.--- 
        beta_ratio = 0.0_r8; q_ig = 0.0_r8; eps = 0.0_r8;   a = 0.0_r8;   b = 0.0_r8;   c = 0.0_r8;   e = 0.0_r8
        phi_wind = 0.0_r8;   xi = 0.0_r8;   reaction_v_max = 0.0_r8;  reaction_v_opt = 0.0_r8; mw_weight = 0.0_r8
-       moist_damp = 0.0_r8;   ir = 0.0_r8; a_beta = 0.0_r8;     
+       moist_damp = 0.0_r8;   ir = 0.0_r8; a_beta = 0.0_r8; wind_fact = 0._r8    
        currentPatch%ROS_front = 0.0_r8
 
        ! remove mineral content from net fuel load per Thonicke 2010 for ir calculation
@@ -546,11 +547,24 @@ contains
 
        ! write(fates_log(),*) 'ir',gamma_aptr,moist_damp,SF_val_fuel_energy,SF_val_miner_damp
 
+       ! wind factor per Pfeiffer et al 2013
+       ! convert effect_wspeed from m/min to m/sec
+       if (currentPatch%effect_wspeed > 0._r8) then
+          if (currentPatch%effect_wspeed/60.0_r8) <= 10._r8) then
+          ! wind_fact = 1._r8 + exp(2._r8*currentPatch%effect_wspeed)-20._r8
+             wind_fact = 1._r8
+          else ! effect_wspeed > 10m/s or high winds
+             wind_fact = 2._r8
+          endif
+       else
+          wind_fact = 1._r8
+       endif
+
        if (((currentPatch%fuel_bulkd) <= 0.0_r8).or.(eps <= 0.0_r8).or.(q_ig <= 0.0_r8)) then
           currentPatch%ROS_front = 0.0_r8
        else ! Equation 9. Thonicke et al. 2010. 
             ! forward ROS in m/min
-          currentPatch%ROS_front = (ir*xi*(1.0_r8+phi_wind)) / (currentPatch%fuel_bulkd*eps*q_ig)
+          currentPatch%ROS_front = (ir*xi*(1.0_r8+phi_wind)*wind_fact) / (currentPatch%fuel_bulkd*eps*q_ig)
           ! write(fates_log(),*) 'ROS',currentPatch%ROS_front,phi_wind,currentPatch%effect_wspeed
           ! write(fates_log(),*) 'ros calcs',currentPatch%fuel_bulkd,ir,xi,eps,q_ig
        endif
