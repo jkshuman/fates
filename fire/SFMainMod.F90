@@ -650,80 +650,17 @@ contains
 
   end subroutine ground_fuel_consumption
 
-  !*****************************************************************
-  subroutine  fire_intensity ( currentSite ) 
-    !*****************************************************************
-    !returns the updated currentPatch%FI value for each patch.
-
-    !currentPatch%FI  avg fire intensity of flaming front during day. Backward ROS plays no role here. kJ/m/s or kW/m.
-    !currentSite%FDI  probability that an ignition will start a fire
-    !currentPatch%ROS_front  forward ROS (m/min) 
-    !currentPatch%TFC_ROS total fuel consumed by flaming front (kgC/m2)
-
-    use FatesInterfaceMod, only : hlm_use_spitfire
-    use SFParamsMod,  only : SF_val_fdi_alpha,SF_val_fuel_energy, &
-         SF_val_max_durat, SF_val_durat_slope
-
-    type(ed_site_type), intent(inout), target :: currentSite
-
-    type(ed_patch_type), pointer :: currentPatch
-
-    real(r8) ROS !m/s
-    real(r8) W   !kgBiomass/m2
-
-    currentPatch => currentSite%oldest_patch;  
-
-    do while(associated(currentPatch))
-       ROS   = currentPatch%ROS_front / 60.0_r8 !m/min to m/sec 
-       W     = currentPatch%TFC_ROS / 0.45_r8 !kgC/m2 to kgbiomass/m2
-       
-       !units of fire intensity = (kJ/kg)*(kgBiomass/m2)*(m/min)
-       currentPatch%FI = SF_val_fuel_energy * W * ROS !kj/m/s, or kW/m
-       
-       if(write_sf == itrue)then
-          if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
-       endif
-       !'decide_fire' subroutine shortened and put in here... 
-       if (currentPatch%FI >= fire_threshold) then  ! 50kW/m is the threshold for a self-sustaining fire
-          currentPatch%fire = 1 ! Fire...    :D
-          
-          ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
-          ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
-          currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha*currentSite%acc_NI)
-          
-          ! Equation 14 in Thonicke et al. 2010
-          ! fire duration in minutes
-
-          currentPatch%FD = (SF_val_max_durat+1.0_r8) / (1.0_r8 + SF_val_max_durat * &
-                            exp(SF_val_durat_slope*currentSite%FDI))
-
-          if(write_SF == itrue)then
-             if ( hlm_masterproc == itrue ) write(fates_log(),*) 'fire duration minutes',currentPatch%fd
-          endif
-          !equation 15 in Arora and Boer CTEM model.Average fire is 1 day long.
-          !currentPatch%FD = 60.0_r8 * 24.0_r8 !no minutes in a day      
-       else     
-          currentPatch%fire = 0 ! No fire... :-/
-          currentPatch%FD   = 0.0_r8      
-       endif
-       !  FIX(SPM,032414) needs a refactor
-       !  FIX(RF,032414) : should happen outside of SF loop - doing all spitfire code is inefficient otherwise. 
-       if( hlm_use_spitfire == ifalse )then   
-          currentPatch%fire = 0 !fudge to turn fire off
-       endif
-
-       currentPatch => currentPatch%younger;
-    enddo !end patch loop
-
-  end subroutine fire_intensity
-
 
   !*****************************************************************
   subroutine  area_burnt ( currentSite ) 
-    !*****************************************************************
+  !*****************************************************************
 
+    !currentSite%FDI  probability that an ignition will start a fire
+    !currentPatch%FD  fire duration in minutes
+    
     use EDParamsMod,       only : ED_val_nignitions
     use FatesConstantsMod, only : years_per_day
+    use SFParamsMod,       only : SF_val_max_durat, SF_val_durat_slope, SF_val_fdi_alpha
 
     type(ed_site_type), intent(inout), target :: currentSite
     type(ed_patch_type), pointer :: currentPatch
@@ -751,7 +688,19 @@ contains
        !  ---initialize patch parameters to zero---
        currentPatch%frac_burnt = 0.0_r8
 
-       if (currentPatch%fire == 1) then
+       if (NF > 0.0_r8) then 
+          ! Equation 14 in Thonicke et al. 2010
+          ! fire duration in minutes
+          currentPatch%FD = (SF_val_max_durat+1.0_r8) / (1.0_r8 + SF_val_max_durat * &
+                            exp(SF_val_durat_slope*currentSite%FDI))
+
+          if(write_SF == itrue)then
+             if ( hlm_masterproc == itrue ) write(fates_log(),*) 'fire duration minutes',currentPatch%fd
+          endif
+          !equation 15 in Arora and Boer CTEM model.Average fire is 1 day long.
+          !currentPatch%FD = 60.0_r8 * 24.0_r8 !no minutes in a day      
+
+          
        ! The feedback between vegetation structure and ellipse size if turned off for now, 
        ! to reduce the positive feedback in the syste,
        ! This will also be investigated by William Hoffmans proposal. 
@@ -782,6 +731,10 @@ contains
 
              !size of fire = equation 14 Arora and Boer JGR 2005
              size_of_fire = ((3.1416_r8/(4.0_r8*lb))*((df+db)**2.0_r8))
+             
+             ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
+             ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
+             currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha*currentSite%acc_NI)
 
              !AB = daily area burnt = size fires in m2 * num ignitions per day per km2 * prob ignition starts fire
              !AB = m2 per km2 per day
@@ -805,6 +758,57 @@ contains
 
   end subroutine area_burnt
 
+
+  !*****************************************************************
+  subroutine  fire_intensity ( currentSite ) 
+  !*****************************************************************
+    !returns the updated currentPatch%FI value for each patch.
+
+    !currentPatch%FI  avg fire intensity of flaming front during day. Backward ROS plays no role here. kJ/m/s or kW/m.
+    !currentPatch%ROS_front  forward ROS (m/min) 
+    !currentPatch%TFC_ROS total fuel consumed by flaming front (kgC/m2)
+
+    use FatesInterfaceMod, only : hlm_use_spitfire
+    use SFParamsMod,       only : SF_val_fuel_energy
+
+    type(ed_site_type), intent(inout), target :: currentSite
+
+    type(ed_patch_type), pointer :: currentPatch
+
+    real(r8) ROS !m/s
+    real(r8) W   !kgBiomass/m2
+
+    currentPatch => currentSite%oldest_patch;  
+
+    do while(associated(currentPatch))
+       ROS   = currentPatch%ROS_front / 60.0_r8 !m/min to m/sec 
+       W     = currentPatch%TFC_ROS / 0.45_r8 !kgC/m2 to kgbiomass/m2
+       
+       !units of fire intensity = (kJ/kg)*(kgBiomass/m2)*(m/min)*(unitless fraction)
+       currentPatch%FI = SF_val_fuel_energy * W * ROS * currentPatch%frac_burnt !kj/m/s, or kW/m
+       
+       if(write_sf == itrue)then
+          if( hlm_masterproc == itrue ) write(fates_log(),*) 'fire_intensity',currentPatch%fi,W,currentPatch%ROS_front
+       endif
+       !'decide_fire' subroutine shortened and put in here... 
+       if (currentPatch%FI >= fire_threshold) then  ! 50kW/m is the threshold for a self-sustaining fire
+          currentPatch%fire = 1 ! Fire...    :D
+       else     
+          currentPatch%fire = 0 ! No fire... :-/
+          currentPatch%FD   = 0.0_r8      
+       endif
+       !  FIX(SPM,032414) needs a refactor
+       !  FIX(RF,032414) : should happen outside of SF loop - doing all spitfire code is inefficient otherwise. 
+       if( hlm_use_spitfire == ifalse )then   
+          currentPatch%fire = 0 !fudge to turn fire off
+       endif
+
+       currentPatch => currentPatch%younger;
+    enddo !end patch loop
+
+  end subroutine fire_intensity
+
+  
   !*****************************************************************
   subroutine  crown_scorching ( currentSite ) 
   !*****************************************************************
