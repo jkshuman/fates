@@ -677,6 +677,10 @@ contains
     !  ---initialize site parameters to zero--- 
     currentSite%frac_burnt = 0.0_r8   
 
+    ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
+    ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
+    currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha * currentSite%acc_NI)
+    
     !NF = number of lighting strikes per day per km2
     NF = ED_val_nignitions * years_per_day
 
@@ -691,8 +695,8 @@ contains
        if (NF > 0.0_r8) then 
           ! Equation 14 in Thonicke et al. 2010
           ! fire duration in minutes
-          currentPatch%FD = (SF_val_max_durat+1.0_r8) / (1.0_r8 + SF_val_max_durat * &
-                            exp(SF_val_durat_slope*currentSite%FDI))
+          currentPatch%FD = (SF_val_max_durat + 1.0_r8) / (1.0_r8 + SF_val_max_durat * &
+                            exp(SF_val_durat_slope * currentSite%FDI))
 
           if(write_SF == itrue)then
              if ( hlm_masterproc == itrue ) write(fates_log(),*) 'fire duration minutes',currentPatch%fd
@@ -731,11 +735,7 @@ contains
 
              !size of fire = equation 14 Arora and Boer JGR 2005
              size_of_fire = ((3.1416_r8/(4.0_r8*lb))*((df+db)**2.0_r8))
-             
-             ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
-             ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
-             currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha*currentSite%acc_NI)
-
+            
              !AB = daily area burnt = size fires in m2 * num ignitions per day per km2 * prob ignition starts fire
              !AB = m2 per km2 per day
              AB = size_of_fire * NF * currentSite%FDI
