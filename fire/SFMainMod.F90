@@ -1010,7 +1010,7 @@ contains
   end subroutine ground_fuel_consumption
 
   !*****************************************************************
-  subroutine  fire_intensity ( currentSite ) 
+  subroutine  fire_intensity ( currentSite, bc_in) 
     !*****************************************************************
     !returns the updated currentPatch%FI value for each patch.
 
@@ -1098,7 +1098,7 @@ contains
 
 
   !*****************************************************************
-  subroutine  area_burnt ( currentSite, bc_in )
+  subroutine  area_burnt ( currentSite)
     !*****************************************************************
 
     type(ed_site_type), intent(inout), target :: currentSite
