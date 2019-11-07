@@ -1043,7 +1043,7 @@ contains
     if (index(stream_fldFileName_lightng, 'nofile') > 0) then
         currentSite%NF = ED_val_nignitions * years_per_day * CG_strikes
     else
-        currentSite%NF = bc_in%lightning24 * 24._r8  ! #/km2/hr to #/km2/day
+        currentSite%NF = bc_in%lightning24 * 24._r8 * CG_strikes ! #/km2/hr to #/km2/day
     end if
 
     ! If there are 15  lightning strikes per year, per km2. (approx from NASA product for S.A.) 
