@@ -1028,6 +1028,7 @@ contains
 
     type(ed_site_type), intent(inout), target :: currentSite
     type(ed_patch_type), pointer :: currentPatch
+    type(bc_in_type), intent(in) :: bc_in
 
     real(r8) ROS !m/s
     real(r8) W   !kgBiomass/m2
@@ -1102,7 +1103,6 @@ contains
 
     type(ed_site_type), intent(inout), target :: currentSite
     type(ed_patch_type), pointer :: currentPatch
-    type(bc_in_type), intent(in) :: bc_in
 
     real(r8) lb               !length to breadth ratio of fire ellipse (unitless)
     real(r8) df               !distance fire has travelled forward in m
