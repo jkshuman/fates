@@ -1035,8 +1035,6 @@ contains
     real(r8),parameter :: CG_strikes = .20_r8      !cloud to ground lightning strikes
                                                    !Latham and Williams (2001)
 
-    currentSite%NF = 0.0_r8
-
     ! NF = number of lighting strikes per day per km2
     ! ED_val_nignitions is from the params file
     ! lightning is the daily avg from a lightning dataset
