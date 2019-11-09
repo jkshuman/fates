@@ -1046,11 +1046,7 @@ contains
     
     ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
     ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
-    if (index(stream_fldFileName_lightng, 'ignition') > 0) then
-          currentSite%FDI = 1._r8  ! READING "SUCCESSFUL IGNITION" DATA
-       else
-          currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha*currentSite%acc_NI)
-    end if
+    currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha*currentSite%acc_NI)
     
     ! NF = number of lighting strikes per day per km2
     ! ED_val_nignitions is from the params file
