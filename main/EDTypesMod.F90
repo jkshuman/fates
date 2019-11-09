@@ -342,6 +342,7 @@ module EDTypesMod
      real(r8) ::  dbdeaddt                               ! time derivative of dead biomass         : KgC/year
 
      ! FIRE
+     real(r8) ::  sh                                     ! scorch height: m 
      real(r8) ::  fraction_crown_burned                  ! proportion of crown affected by fire:-
      real(r8) ::  cambial_mort                           ! probability that trees dies due to cambial char 
                                                          ! (conditional on the tree being subjected to the fire)
@@ -519,7 +520,6 @@ module EDTypesMod
      real(r8) ::  fi                                               ! average fire intensity of flaming front:  kj/m/s or kw/m
      integer  ::  fire                                             ! Is there a fire? 1=yes 0=no
      real(r8) ::  fd                                               ! fire duration: mins
-     real(r8) ::  sh                                               ! average scorch height: m 
 
      ! FIRE EFFECTS     
      real(r8) ::  frac_burnt                                       ! fraction burnt: frac gridcell/day  
@@ -687,7 +687,8 @@ module EDTypesMod
      real(r8) ::  wind                                         ! daily wind in m/min for Spitfire units 
      real(r8) ::  acc_ni                                       ! daily nesterov index accumulating over time.
      real(r8) ::  fdi                                          ! daily probability an ignition event will start a fire
-     real(r8) ::  frac_burnt                                   ! fraction of soil burnt in this day.
+     real(r8) ::  NF                                           ! daily ignitions in km2
+     real(r8) ::  frac_burnt                                   ! fraction of area burnt in this day.
 
      ! PLANT HYDRAULICS
      type(ed_site_hydr_type), pointer :: si_hydr
