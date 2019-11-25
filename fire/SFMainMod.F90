@@ -1047,6 +1047,7 @@ contains
     ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
     ! FDI 0.1 = low, 0.3 moderate, 0.75 high, and 1 = extreme ignition potential for alpha 0.000337
     currentSite%FDI  = 1.0_r8 - exp(-SF_val_fdi_alpha*currentSite%acc_NI)
+
     
     ! NF = number of lighting strikes per day per km2
     ! ED_val_nignitions is from the params file
@@ -1057,10 +1058,14 @@ contains
         currentSite%NF = bc_in%lightning24 * 24._r8 * CG_strikes  ! #/km2/hr to #/km2/day
     end if 
 
+
     currentPatch => currentSite%oldest_patch;  
     do while(associated(currentPatch))
        !  ---initialize patch parameters to zero---
+       currentPatch%fire       = 0
+       currentPatch%FD         = 0.0_r8
        currentPatch%frac_burnt = 0.0_r8
+       
 
        if (currentSite%NF > 0.0_r8) then
           
@@ -1122,6 +1127,7 @@ contains
          ROS   = currentPatch%ROS_front / 60.0_r8 !m/min to m/sec 
          W     = currentPatch%TFC_ROS / 0.45_r8 !kgC/m2 to kgbiomass/m2          
 
+         ! EQ 15 Thonicke et al 2010
          !units of fire intensity = (kJ/kg)*(kgBiomass/m2)*(m/min)*unitless_fraction
          currentPatch%FI = SF_val_fuel_energy * W * ROS * currentPatch%frac_burnt !kj/m/s, or kW/m
        
@@ -1130,7 +1136,9 @@ contains
          endif
 
          !'decide_fire' subroutine 
+
          if (currentPatch%FI > fire_threshold) then !kW/m threshold for fire
+
             currentPatch%fire = 1 ! Fire...    :D
           
          else     
@@ -1164,7 +1172,6 @@ contains
     type(ed_patch_type), pointer :: currentPatch
     type(ed_cohort_type), pointer :: currentCohort
 
-    real(r8) ::  f_ag_bmass      ! fraction of tree cohort's above-ground biomass as a proportion of total patch ag tree biomass
     real(r8) ::  tree_ag_biomass ! total amount of above-ground tree biomass in patch. kgC/m2
     real(r8) ::  leaf_c          ! leaf carbon      [kg]
     real(r8) ::  sapw_c          ! sapwood carbon   [kg]
@@ -1175,7 +1182,6 @@ contains
     do while(associated(currentPatch)) 
 
        tree_ag_biomass = 0.0_r8
-       f_ag_bmass = 0.0_r8
        if (currentPatch%fire == 1) then
           currentCohort => currentPatch%tallest;
           do while(associated(currentCohort))  
@@ -1188,36 +1194,18 @@ contains
                 tree_ag_biomass = tree_ag_biomass + &
                       currentCohort%n * (leaf_c + & 
                       EDPftvarcon_inst%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c))
-             endif !trees only
+ 
 
-             currentCohort=>currentCohort%shorter;
-
-          enddo !end cohort loop
-
-          !This loop weights the scorch height for the contribution of each cohort to the overall biomass.   
-
-         ! does this do anything? I think it might be redundant? RF. 
-
-          currentCohort => currentPatch%tallest;
-          do while(associated(currentCohort))
              currentCohort%SH = 0.0_r8
-             if (EDPftvarcon_inst%woody(currentCohort%pft) == 1 &
-                  .and. (tree_ag_biomass > 0.0_r8)) then !trees only
+                if (tree_ag_biomass > 0.0_r8) then 
 
-                leaf_c = currentCohort%prt%GetState(leaf_organ, all_carbon_elements)
-                sapw_c = currentCohort%prt%GetState(sapw_organ, all_carbon_elements)
-                struct_c = currentCohort%prt%GetState(struct_organ, all_carbon_elements)
-                
-                f_ag_bmass = currentCohort%n * (leaf_c + &
-                             EDPftvarcon_inst%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c)) &
-                             / tree_ag_biomass
-
-                !equation 16 in Thonicke et al. 2010
-                if(write_SF == itrue)then
-                   if ( hlm_masterproc == itrue ) write(fates_log(),*) 'currentCohort%SH',currentCohort%SH,f_ag_bmass
-                endif
-                !2/3 Byram (1959)
-                currentCohort%SH = EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8) 
+                !Equation 16 in Thonicke et al. 2010 !Van Wagner 1973 EQ8 !2/3 Byram (1959)
+                currentCohort%SH = EDPftvarcon_inst%fire_alpha_SH(currentCohort%pft) * (currentPatch%FI**0.667_r8)
+             
+                  if(write_SF == itrue)then
+                     if ( hlm_masterproc == itrue ) write(fates_log(),*) 'currentCohort%SH',currentCohort%SH
+                  endif
+                endif ! tree biomass
 
              endif !trees only
              currentCohort=>currentCohort%shorter;
