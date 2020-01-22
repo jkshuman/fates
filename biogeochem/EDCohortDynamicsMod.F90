@@ -1655,7 +1655,7 @@ contains
     n%ddbhdt          = o%ddbhdt
 
     ! FIRE
-    n%scorch_ht             = o%scorch_ht 
+    n%scorch_ht             = o%scorch_ht  
     n%fraction_crown_burned = o%fraction_crown_burned
     n%fire_mort             = o%fire_mort
     n%crownfire_mort        = o%crownfire_mort
