@@ -145,9 +145,8 @@ module EDTypesMod
   integer,  parameter, public :: dl_sf                = 5          ! array index of dead leaf pool for spitfire (dead grass and dead leaves)
   integer,  parameter, public :: lg_sf                = 6          ! array index of live grass pool for spitfire
 
-
-  !real(r8), parameter, public :: fire_threshold       = 50.0_r8    ! threshold for fires that spread or go out. KWm-2 (Pyne 1986)
   real(r8), parameter, public :: fire_threshold       = 0.01_r8     ! track all fires with energy greater than .01 kW/m2
+  !real(r8), parameter, public :: fire_threshold       = 50.0_r8    ! threshold for fires that spread or go out. KWm-2 (Pyne 1986)
 
   ! PATCH FUSION 
   real(r8), parameter, public :: force_patchfuse_min_biomass = 0.005_r8   ! min biomass (kg / m2 patch area) below which to force-fuse patches
@@ -218,6 +217,8 @@ module EDTypesMod
      real(r8) ::  hite                                   ! height: meters
      integer  ::  indexnumber                            ! unique number for each cohort. (within clump?)
      real(r8) ::  laimemory                              ! target leaf biomass- set from previous year: kGC per indiv
+     real(r8) ::  sapwmemory                             ! target sapwood biomass- set from previous year: kGC per indiv
+     real(r8) ::  structmemory                           ! target structural biomass- set from previous year: kGC per indiv
      integer  ::  canopy_layer                           ! canopy status of cohort (1 = canopy, 2 = understorey, etc.)
      real(r8) ::  canopy_layer_yesterday                 ! recent canopy status of cohort
                                                          ! (1 = canopy, 2 = understorey, etc.)  
@@ -344,7 +345,6 @@ module EDTypesMod
      real(r8) ::  dbdeaddt                               ! time derivative of dead biomass         : KgC/year
 
      ! FIRE
-     real(r8) ::  scorch_ht                              ! scorch height: m 
      real(r8) ::  fraction_crown_burned                  ! proportion of crown affected by fire:-
      real(r8) ::  cambial_mort                           ! probability that trees dies due to cambial char 
                                                          ! (conditional on the tree being subjected to the fire)
@@ -524,6 +524,7 @@ module EDTypesMod
      real(r8) ::  fd                                               ! fire duration: mins
 
      ! FIRE EFFECTS     
+     real(r8) ::  scorch_ht(maxpft)                                ! scorch height: m 
      real(r8) ::  frac_burnt                                       ! fraction burnt: frac gridcell/day  
      real(r8) ::  tfc_ros                                          ! total fuel consumed - no trunks.  KgC/m2/day
      real(r8) ::  burnt_frac_litter(nfsc)                          ! fraction of each litter pool burned:-
@@ -962,6 +963,8 @@ module EDTypesMod
      write(fates_log(),*) 'co%dbh                    = ', ccohort%dbh                                        
      write(fates_log(),*) 'co%hite                   = ', ccohort%hite
      write(fates_log(),*) 'co%laimemory              = ', ccohort%laimemory
+     write(fates_log(),*) 'co%sapwmemory             = ', ccohort%sapwmemory
+     write(fates_log(),*) 'co%structmemory           = ', ccohort%structmemory
      
      write(fates_log(),*) 'leaf carbon               = ', ccohort%prt%GetState(leaf_organ,all_carbon_elements) 
      write(fates_log(),*) 'fineroot carbon           = ', ccohort%prt%GetState(fnrt_organ,all_carbon_elements) 
