@@ -1054,7 +1054,7 @@ contains
     
     ! NF = number of lighting strikes per day per km2 scaled by cloud to ground strikes
     ! ED_val_nignitions is from the params file
-    ! lightning is the daily avg from a lightning dataset
+    ! lightning24 is the daily avg from a lightning dataset
     if (index(stream_fldFileName_lightng, 'nofile') > 0) then
 
         currentSite%NF = ED_val_nignitions * years_per_day * cg_strikes
