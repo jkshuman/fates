@@ -414,7 +414,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_recruitment_si_pft
   integer :: ih_mortality_si_pft
   integer :: ih_crownarea_si_pft
-
+  integer :: ih_btran_pft
 
   ! indices to (site x patch-age) variables
   integer :: ih_area_si_age
@@ -3065,7 +3065,8 @@ end subroutine flush_hvars
                hio_fabi_sun_top_si_can  => this%hvars(ih_fabi_sun_top_si_can)%r82d, &
                hio_fabi_sha_top_si_can  => this%hvars(ih_fabi_sha_top_si_can)%r82d, &
                hio_parsun_top_si_can     => this%hvars(ih_parsun_top_si_can)%r82d, &
-               hio_parsha_top_si_can     => this%hvars(ih_parsha_top_si_can)%r82d &
+               hio_parsha_top_si_can     => this%hvars(ih_parsha_top_si_can)%r82d, &
+               hio_btran_pft             => this%hvars(ih_btran_pft)%r82d &
                )
 
 
@@ -3337,6 +3338,12 @@ end subroutine flush_hvars
                   hio_parprof_dif_si_cnlf(io_si,cnlf_indx) = hio_parprof_dif_si_cnlf(io_si,cnlf_indx) + &
                        cpatch%parprof_dif_z(ican,ileaf) * cpatch%area * AREA_INV
                end do
+            end do
+
+            ! calculate patch-area-weighted mean btran by PFT
+            do ipft=1,numpft
+               hio_btran_pft(io_si,ipft) = hio_btran_pft(io_si,ipft) + &
+                    cpatch%btran_ft(ipft) * cpatch%area * AREA_INV
             end do
 
             ipa = ipa + 1
@@ -4469,6 +4476,12 @@ end subroutine flush_hvars
          use_default='inactive',       &
          avgflag='A', vtype=site_can_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=2,   &
          ivar=ivar, initialize=initialize_variables, index = ih_fabi_sha_top_si_can )
+
+    call this%set_history_var(vname='BTRAN_PFT', units='fraction',                 &
+         long='PFT-resolved btran value', &
+         use_default='active',       &
+         avgflag='A', vtype=site_pft_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=2,   &
+         ivar=ivar, initialize=initialize_variables, index = ih_btran_pft )    
 
     !!! canopy-resolved fluxes and structure
     call this%set_history_var(vname='NET_C_UPTAKE_CNLF', units='gC/m2/s',                 &
