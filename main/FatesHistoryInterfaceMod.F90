@@ -140,7 +140,6 @@ module FatesHistoryInterfaceMod
   integer :: ih_trimming_pa
   integer :: ih_area_plant_pa
   integer :: ih_area_treespread_pa
-  integer :: ih_nesterov_fire_danger_pa
   integer :: ih_spitfire_ROS_pa
   integer :: ih_effect_wspeed_pa
   integer :: ih_TFC_ROS_pa
@@ -265,6 +264,7 @@ module FatesHistoryInterfaceMod
   integer :: ih_dleafon_si
   integer :: ih_meanliqvol_si
 
+  integer :: ih_nesterov_fire_danger_si
 
   integer :: ih_nplant_si_scpf
   integer :: ih_gpp_si_scpf
@@ -323,7 +323,6 @@ module FatesHistoryInterfaceMod
   integer :: ih_ar_frootm_si_scpf
   
   integer :: ih_c13disc_si_scpf
-
 
   ! indices to (site x scls [size class bins]) variables
   integer :: ih_ba_si_scls
@@ -430,6 +429,10 @@ module FatesHistoryInterfaceMod
   integer :: ih_c_lblayer_si_age
   integer :: ih_agesince_anthrodist_si_age
   integer :: ih_secondaryforest_area_si_age
+  integer :: if_area_burnt_si_age
+  ! integer :: if_fire_rate_of_spread_front_si_age
+  ! integer :: if_fire_intensity_si_age
+  integer :: if_fire_sum_fuel_si_age
 
   ! indices to (site x height) variables
   integer :: ih_canopy_height_dist_si_height
@@ -1715,7 +1718,7 @@ end subroutine flush_hvars
                hio_recruitment_si_pft  => this%hvars(ih_recruitment_si_pft)%r82d, &
                hio_mortality_si_pft    => this%hvars(ih_mortality_si_pft)%r82d, &
                hio_crownarea_si_pft    => this%hvars(ih_crownarea_si_pft)%r82d, &
-               hio_nesterov_fire_danger_pa => this%hvars(ih_nesterov_fire_danger_pa)%r81d, &
+               hio_nesterov_fire_danger_si => this%hvars(ih_nesterov_fire_danger_si)%r81d, &
                hio_spitfire_ros_pa     => this%hvars(ih_spitfire_ROS_pa)%r81d, &
                hio_tfc_ros_pa          => this%hvars(ih_TFC_ROS_pa)%r81d, &
                hio_effect_wspeed_pa    => this%hvars(ih_effect_wspeed_pa)%r81d, &
@@ -1891,6 +1894,10 @@ end subroutine flush_hvars
                hio_woodproduct_si                 => this%hvars(ih_woodproduct_si)%r81d, &
                hio_agesince_anthrodist_si_age     => this%hvars(ih_agesince_anthrodist_si_age)%r82d, &
                hio_secondaryforest_area_si_age    => this%hvars(ih_secondaryforest_area_si_age)%r82d, &
+               hio_area_burnt_si_age              => this%hvars(ih_area_burnt_si_age)%r82d, &
+               ! hio_fire_rate_of_spread_front_si_age  => this%hvars(ih_fire_rate_of_spread_front_si_age)%r82d, &
+               ! hio_fire_intensity_si_age          => this%hvars(ih_fire_intensity_si_age)%r82d, &
+               hio_fire_sum_fuel_si_age           => this%hvars(ih_fire_sum_fuel_si_age)%r82d, &
                hio_canopy_height_dist_si_height   => this%hvars(ih_canopy_height_dist_si_height)%r82d, &
                hio_leaf_height_dist_si_height     => this%hvars(ih_leaf_height_dist_si_height)%r82d, &
                hio_litter_moisture_si_fuel        => this%hvars(ih_litter_moisture_si_fuel)%r82d, &
@@ -1989,6 +1996,8 @@ end subroutine flush_hvars
          hio_woodproduct_si(io_si)          = sites(s)%resources_management%trunk_product_site &
               * AREA_INV * g_per_kg
          
+         ! site-level fire variables
+         hio_nesterov_fire_danger_si(io_si) = sites(s)%acc_NI
 
          ! If hydraulics are turned on, track the error terms
          ! associated with dynamics
@@ -2043,14 +2052,26 @@ end subroutine flush_hvars
                     + cpatch%area * AREA_INV
             endif
             
+            !!! patch-age-resolved fire variables
             do i_pft = 1,numpft
                ! for scorch height, weight the value by patch area within any given age calss (in the event that there is
                ! more than one patch per age class.
                iagepft = cpatch%age_class + (i_pft-1) * nlevage
                hio_scorch_height_si_agepft(io_si,iagepft) = hio_scorch_height_si_agepft(io_si,iagepft) + &
                     cpatch%Scorch_ht(i_pft) * cpatch%area
-
             end do
+
+            hio_area_burnt_si_age(io_si,cpatch%age_class) = hio_area_burnt_si_age(io_si,cpatch%age_class) + &
+                 cpatch*frac_burnt * cpatch%area * AREA_INV
+
+            ! hio_fire_rate_of_spread_front_si_age(io_si, cpatch%age_class) = hio_fire_rate_of_spread_si_age(io_si, cpatch%age_class) + &
+            !      cpatch%ros_front * cpatch*frac_burnt * cpatch%area * AREA_INV
+
+            ! hio_fire_intensity_si_age(io_si, cpatch%age_class) = hio_fire_intensity_si_age(io_si, cpatch%age_class) + &
+            !      cpatch%FI * cpatch*frac_burnt * cpatch%area * AREA_INV
+
+            hio_fire_sum_fuel_si_age(io_si, cpatch%age_class) = hio_fire_sum_fuel_si_age(io_si, cpatch%age_class) + &
+                 cpatch%sum_fuel * cpatch%area * AREA_INV
              
             ccohort => cpatch%shortest
             do while(associated(ccohort))
@@ -2586,7 +2607,6 @@ end subroutine flush_hvars
             endif
             
             ! Update Fire Variables
-            hio_nesterov_fire_danger_pa(io_pa) = sites(s)%acc_NI
             hio_spitfire_ros_pa(io_pa)         = cpatch%ROS_front 
             hio_effect_wspeed_pa(io_pa)        = cpatch%effect_wspeed
             hio_tfc_ros_pa(io_pa)              = cpatch%TFC_ROS
@@ -4051,8 +4071,8 @@ end subroutine flush_hvars
 
     call this%set_history_var(vname='FIRE_NESTEROV_INDEX', units='none',       &
          long='nesterov_fire_danger index', use_default='active',               &
-         avgflag='A', vtype=patch_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=1,   &
-         ivar=ivar, initialize=initialize_variables, index = ih_nesterov_fire_danger_pa)
+         avgflag='A', vtype=site_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=1,   &
+         ivar=ivar, initialize=initialize_variables, index = ih_nesterov_fire_danger_si)
 
     call this%set_history_var(vname='FIRE_ROS', units='m/min',                 &
          long='fire rate of spread m/min', use_default='active',                &
@@ -4109,6 +4129,19 @@ end subroutine flush_hvars
          long='spitfire size-resolved fuel moisture', use_default='active',       &
          avgflag='A', vtype=site_fuel_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=1,   &
          ivar=ivar, initialize=initialize_variables, index = ih_litter_moisture_si_fuel )
+
+    call this%set_history_var(vname='AREA_BURNT_BY_PATCH_AGE', units='m2/m2', &
+         long='spitfire area burnt by patch age (divide by patch_area_by_age to get burnt fraction by age)', &
+         use_default='active', &
+         avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=1, &
+         ivar=ivar, initialize=initialize_variables, index = ih_area_burnt_si_age )
+
+    call this%set_history_var(vname='SUM_FUEL_BY_PATCH_AGE', units='gC / m2 of site area', &
+         long='spitfire ground fuel related to ros (omits 1000hr fuels) within each patch age bin (divide by patch_area_by_age to get fuel per unit area of that-age patch)', &
+         use_default='active', &
+         avgflag='A', vtype=site_age_r8, hlms='CLM:ALM', flushval=0.0_r8, upfreq=1, &
+         ivar=ivar, initialize=initialize_variables, index = ih_sum_fuel_si_age )
+
 
     ! Litter Variables
 
