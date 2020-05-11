@@ -147,7 +147,8 @@ module EDTypesMod
   integer,  parameter, public :: dl_sf                = 5          ! array index of dead leaf pool for spitfire (dead grass and dead leaves)
   integer,  parameter, public :: lg_sf                = 6          ! array index of live grass pool for spitfire
 
-  real(r8), parameter, public :: fire_threshold       = 25.0_r8     ! track fires above 25 kW/m2 (Govender 2006)
+  real(r8), parameter, public :: fire_threshold       = 10.0_r8     ! track fires above 10 kW/m2
+  !real(r8), parameter, public :: fire_threshold       = 25.0_r8     ! track fires above 10 kW/m2 (Govender 2006)
   !real(r8), parameter, public :: fire_threshold       = 50.0_r8    ! threshold for fires that spread or go out. KWm-2 (Pyne 1986)
 
   ! PATCH FUSION 
