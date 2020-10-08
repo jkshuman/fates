@@ -149,6 +149,9 @@ module EDTypesMod
   integer,  parameter, public :: dl_sf                = 5          ! array index of dead leaf pool for spitfire (dead grass and dead leaves)
   integer,  parameter, public :: lg_sf                = 6          ! array index of live grass pool for spitfire
 
+  real(r8), parameter, public :: crown_fire_threshold = 200.0_r8   ! threshold for passive crown fire ignition. KWm-2 (Bessie & Johnson 1995)
+
+
   ! PATCH FUSION 
   real(r8), parameter, public :: force_patchfuse_min_biomass = 0.005_r8   ! min biomass (kg / m2 patch area) below which to force-fuse patches
   integer , parameter, public :: N_DBH_BINS           = 6                 ! no. of dbh bins used when comparing patches
@@ -558,6 +561,7 @@ module EDTypesMod
      real(r8) ::  frac_burnt                                       ! fraction burnt: frac gridcell/day  
      real(r8) ::  tfc_ros                                          ! total fuel consumed - no trunks.  KgC/m2/day
      real(r8) ::  burnt_frac_litter(nfsc)                          ! fraction of each litter pool burned:-
+     integer  ::  active_crown_fire_flg                            ! flag for active crown fire ignition
 
 
      ! PLANT HYDRAULICS   (not currently used in hydraulics RGK 03-2018)  
@@ -992,6 +996,7 @@ module EDTypesMod
      write(fates_log(),*) 'pa%disturbance_rate   = ',cpatch%disturbance_rate
      write(fates_log(),*) 'pa%disturbance_rates  = ',cpatch%disturbance_rates(:)
      write(fates_log(),*) 'pa%anthro_disturbance_label = ',cpatch%anthro_disturbance_label
+     write(fates_log(),*) 'pa%active_crown_fire_flg = ', cpatch%active_crown_fire_flg
      write(fates_log(),*) '----------------------------------------'
      do el = 1,num_elements
         write(fates_log(),*) 'element id: ',element_list(el)

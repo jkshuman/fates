@@ -610,6 +610,7 @@ contains
     currentCohort%crownfire_mort        = nan ! probability of tree post-fire mortality due to crown scorch
     currentCohort%fire_mort             = nan ! post-fire mortality from cambial and crown damage assuming two are independent
 
+
   end subroutine nan_cohort
 
   !-------------------------------------------------------------------------------------!
