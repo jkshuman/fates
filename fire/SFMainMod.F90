@@ -1030,7 +1030,7 @@ contains
              crown_fuel_per_m                     = 0.0_r8
 
              ! Calculate crown 1hr fuel biomass (leaf, twig sapwood, twig structural biomass)         
-             if (EDPftvarcon_inst%woody(currentCohort%pft) == 1) then !trees only
+             if (int(prt_params%woody(currentCohort%pft)) == itrue) then !trees only
 
                 crown_depth    = currentCohort%hite*EDPftvarcon_inst%crown(currentCohort%pft) 
                 height_cbb     = currentCohort%hite - crown_depth
@@ -1045,7 +1045,7 @@ contains
                 struct_c = currentCohort%prt%GetState(struct_organ, all_carbon_elements)
 
                 tree_sapw_struct_c =  currentCohort%n * & 
-                        (EDPftvarcon_inst%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c))
+                        (prt_params%allom_agb_frac(currentCohort%pft)*(sapw_c + struct_c))
 
                 twig_sapw_struct_c =  tree_sapw_struct_c * SF_VAL_CWD_frac(1)   !only 1hr fuel
 
@@ -1136,7 +1136,7 @@ contains
                
                 ! Equation 17 in Thonicke et al. 2010
                 ! flame scorch into canopy, and potentially over top of canopy 
-                if (currentCohort%hite > 0.0_r8 .and. (currentPatch%Scorch_ht(currentCohort%pft) >= height_cbb) then
+                if (currentCohort%hite > 0.0_r8 .and. (currentPatch%Scorch_ht(currentCohort%pft) >= height_cbb)) then
                    if (currentPatch%active_crown_fire_flg == 0) then  
                       currentCohort%fraction_crown_burned = min(1.0_r8, &
                            ((currentPatch%Scorch_ht(currentCohort%pft) - height_cbb)/crown_depth))
