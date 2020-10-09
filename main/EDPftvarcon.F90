@@ -52,7 +52,6 @@ module EDPftvarcon
                                                      ! that is occupied by crown. For fire model. 
      real(r8), allocatable :: bark_scaler(:)         ! scaler from dbh to bark thickness. For fire model.
      real(r8), allocatable :: crown_kill(:)          ! crown resistance to fire. (1 = none) For fire model.
-     real(r8), allocatable :: active_crown_fire(:)   ! Is plant susceptible to active crown fire?
      real(r8), allocatable :: initd(:)               ! initial seedling density 
 
      real(r8), allocatable :: seed_suppl(:)          ! seeds that come from outside the gridbox.
@@ -321,10 +320,6 @@ contains
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
     name = 'fates_fire_crown_kill'
-    call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
-         dimension_names=dim_names, lower_bounds=dim_lower_bound)
-
-    name = 'fates_fire_active_crown_fire'
     call fates_params%RegisterParameter(name=name, dimension_shape=dimension_shape_1d, &
          dimension_names=dim_names, lower_bounds=dim_lower_bound)
 
@@ -661,10 +656,6 @@ contains
     name = 'fates_fire_crown_kill'
     call fates_params%RetreiveParameterAllocate(name=name, &
          data=this%crown_kill)
-
-    name = 'fates_fire_active_crown_fire'
-    call fates_params%RetreiveParameterAllocate(name=name, &
-         data=this%active_crown_fire)
 
     name = 'fates_recruit_initd'
     call fates_params%RetreiveParameterAllocate(name=name, &
@@ -1331,7 +1322,6 @@ contains
         write(fates_log(),fmt0) 'crown = ',EDPftvarcon_inst%crown
         write(fates_log(),fmt0) 'bark_scaler = ',EDPftvarcon_inst%bark_scaler
         write(fates_log(),fmt0) 'crown_kill = ',EDPftvarcon_inst%crown_kill
-        write(fates_log(),fmt0) 'active_crown_fire = ',EDPftvarcon_inst%active_crown_fire
         write(fates_log(),fmt0) 'initd = ',EDPftvarcon_inst%initd
         write(fates_log(),fmt0) 'seed_suppl = ',EDPftvarcon_inst%seed_suppl
         write(fates_log(),fmt0) 'bb_slope = ',EDPftvarcon_inst%bb_slope
