@@ -697,7 +697,7 @@ contains
     real(r8), parameter :: wind_convert = 0.06_r8  ! convert wind speed from m/min to km/hr
 
     !  ---initialize site parameters to zero--- 
-    currentSite%frac_burnt = 0.0_r8  
+    currentSite%frac_burnt(:) = 0.0_r8  
     currentSite%NF_successful = 0._r8
     
     ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
@@ -798,7 +798,7 @@ contains
              AB = size_of_fire * currentSite%NF * currentSite%FDI
 
              !frac_burnt 
-             currentPatch%frac_burnt = (min(0.99_r8, AB / km2_to_m2)) * currentPatch%area/area 
+             currentPatch%frac_burnt = (min(0.99_r8, AB / km2_to_m2))
              
              if(write_SF == itrue)then
                 if ( hlm_masterproc == itrue ) write(fates_log(),*) 'frac_burnt',currentPatch%frac_burnt
@@ -823,6 +823,10 @@ contains
             !
             currentSite%NF_successful = currentSite%NF_successful + &
                  currentSite%NF * currentSite%FDI * currentPatch%area / area
+            !
+            ! accumulate frac_burnt % at site level
+            currentSite%frac_burnt(cpatch%age_class) = currentSite%frac_burnt(cpatch%age_class) + currentPatch%frac_burnt    
+            !
          else     
             currentPatch%fire       = 0 ! No fire... :-/
             currentPatch%FD         = 0.0_r8
@@ -830,11 +834,7 @@ contains
          endif         
           
        endif! NF ignitions check
-
        
-       ! accumulate frac_burnt % at site level
-       currentSite%frac_burnt = currentSite%frac_burnt + currentPatch%frac_burnt    
-
        currentPatch => currentPatch%younger
 
     enddo !end patch loop
