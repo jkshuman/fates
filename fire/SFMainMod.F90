@@ -710,7 +710,6 @@ contains
     real(r8), parameter :: m_per_min__to__km_per_hour = 0.06_r8  ! convert wind speed from m/min to km/hr
 
     !  ---initialize site parameters to zero--- 
-    currentSite%frac_burnt(:) = 0.0_r8  
     currentSite%NF_successful = 0._r8
     
     ! Equation 7 from Venevsky et al GCB 2002 (modification of equation 8 in Thonicke et al. 2010) 
@@ -844,15 +843,9 @@ contains
             currentSite%NF_successful = currentSite%NF_successful + &
                  currentSite%NF * currentSite%FDI * currentPatch%area / area
             !
-            ! accumulate frac_burnt % at site level. this is purely being tracked as a diagnostic 
-            ! since patch%frac_burnt * patch%area changes due to the fire before history output
-            currentSite%frac_burnt(currentPatch%age_class) = currentSite%frac_burnt(currentPatch%age_class) + &
-                 currentPatch%frac_burnt * currentPatch%area / area
-            !
          else     
             currentPatch%fire       = 0 ! No fire... :-/
             currentPatch%FD         = 0.0_r8
-            currentPatch%frac_burnt = 0.0_r8
          endif         
           
        endif! NF ignitions check
