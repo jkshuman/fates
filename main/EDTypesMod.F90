@@ -30,7 +30,7 @@ module EDTypesMod
   
   integer, parameter, public :: nclmax = 3                ! Maximum number of canopy layers
   integer, parameter, public :: ican_upper = 1            ! Nominal index for the upper canopy
-  integer, parameter, public :: ican_ustory = 2           ! Nominal index for diagnostics that refer
+  integer, parameter, public :: ican_ustory = 3           ! Nominal index for diagnostics that refer
                                                           ! to understory layers (all layers that
                                                           ! are not the top canopy layer)
 
