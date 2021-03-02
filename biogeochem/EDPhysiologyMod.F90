@@ -2292,7 +2292,7 @@ contains
     integer :: c                       ! Fuel size class index
     integer :: ilyr                    ! Soil layer index
     integer :: dcmpy                   ! Decomposibility pool indexer
-    integer :: soil_layer_index = 1    ! Soil layer index associated with above ground litter
+    integer :: soil_layer_index = 3    ! Soil layer index associated with above ground litter
     !----------------------------------------------------------------------
 
 
